@@ -28,7 +28,7 @@ const App: React.FC = () => {
     currentTime: 0,
   });
 
-  const [fontSize, setFontSize] = useState("text-4xl line-clamp-2");
+  const [fontSize, setFontSize] = useState("text-5xl");
   const trackNameRef = useRef<HTMLHeadingElement>(null);
   const [backgroundColor, setBackgroundColor] = useState("#3b6374");
 
@@ -41,7 +41,7 @@ const App: React.FC = () => {
     isActivelyPlaying: songData?.is_playing,
   });
 
-  const extractAndSetBackgroundColor = (thumbnail: string) => {
+  const extractAndSetBackgroundColor = async (thumbnail: string) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = thumbnail;
@@ -61,16 +61,32 @@ const App: React.FC = () => {
     };
   };
 
+  const adjustFontSizeWithRetry = (retryCount = 5) => {
+    if (trackNameRef.current) {
+      adjustFontSize();
+    } else if (retryCount > 0) {
+      setTimeout(() => adjustFontSizeWithRetry(retryCount - 1), 50);
+    } else {
+      console.log("Element was not available after retries");
+    }
+  };
+
   const adjustFontSize = useCallback(() => {
     if (trackNameRef.current) {
+      setFontSize("text-5xl");
+
       requestAnimationFrame(() => {
         const element = trackNameRef.current;
+
         const lineHeight = parseInt(
           window.getComputedStyle(element).lineHeight
         );
-        const lines = Math.round(element.scrollHeight / lineHeight);
+        const totalHeight = element.scrollHeight;
+        const lines = Math.round(totalHeight / lineHeight);
 
-        if (lines === 1) {
+        console.log(lineHeight, totalHeight, lines);
+
+        if (lines <= 2) {
           setFontSize("text-5xl");
         } else {
           setFontSize("text-4xl line-clamp-2");
@@ -80,15 +96,8 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    adjustFontSize();
-  }, [adjustFontSize]);
-
-  useEffect(() => {
-    adjustFontSize();
-  }, [songData?.track_name]);
-
-  useEffect(() => {
-    const onMusicUpdates = async (data: SongData) => {
+    const onMusicUpdates = (data: SongData) => {
+      let oldData = songData;
       setSongData(data);
 
       if (data.track_progress && data.track_duration) {
@@ -98,7 +107,12 @@ const App: React.FC = () => {
           currentTime: data.track_progress,
         });
       }
-      if (data.thumbnail && data.thumbnail) {
+
+      if (data.track_name && data.track_name !== songData?.track_name) {
+        adjustFontSizeWithRetry();
+      }
+
+      if (data.thumbnail && data.thumbnail !== songData?.thumbnail) {
         extractAndSetBackgroundColor(data.thumbnail);
       }
     };
@@ -114,6 +128,10 @@ const App: React.FC = () => {
   if (location.href === "http://localhost:5173/") {
     songData = sampleSongData;
     extractAndSetBackgroundColor(songData.thumbnail);
+
+    useEffect(() => {
+      adjustFontSizeWithRetry();
+    }, []);
   }
 
   useEffect(() => {
@@ -159,11 +177,8 @@ const App: React.FC = () => {
       <CrossFade contentKey={contentKey} timeout={500}>
         <div className="relative flex h-full w-screen flex-col justify-between">
           <div className="flex h-full items-center">
-            <div className="mx-4 flex h-full w-screen flex-row items-center px-4 py-10">
-              <div
-                className="relative flex-shrink-0 overflow-hidden rounded drop-shadow-2xl"
-                style={{ width: "25%", paddingBottom: "25%" }}
-              >
+            <div className="mx-4 flex h-full w-screen flex-row items-center px-4 pb-10 pt-12">
+              <div className="relative aspect-square h-full w-1/3 flex-shrink-0 overflow-hidden rounded drop-shadow-2xl">
                 <CrossFade
                   contentKey={songData?.thumbnail || "default"}
                   timeout={500}
@@ -172,25 +187,25 @@ const App: React.FC = () => {
                     <img
                       src={songData?.thumbnail}
                       alt=""
-                      className="absolute inset-0 h-full w-full object-cover"
+                      className="absolute inset-0 aspect-square object-cover"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#00384c]"></div>
+                    <div className="absolute inset-0 flex aspect-square items-center justify-center bg-[#00384c]"></div>
                   )}
                 </CrossFade>
               </div>
               <div className="mr-16 flex w-full px-2 transition-[width] duration-500">
-                <div className="mx-4 flex w-full flex-col gap-2 font-inter">
+                <div className="flex w-full flex-col font-inter">
                   <CrossFade
                     contentKey={songData?.album || "default-album"}
                     timeout={500}
                   >
                     {songData?.album ? (
-                      <h3 className="line-clamp-1 tracking-wider text-white/80">
+                      <h3 className="mx-4 mb-1.5 line-clamp-1 text-lg font-semibold tracking-wider text-white/80">
                         {songData?.album}
                       </h3>
                     ) : (
-                      <h3 className="line-clamp-1 w-fit animate-pulse rounded bg-slate-200 tracking-wider text-transparent">
+                      <h3 className="mx-4 mb-1.5 line-clamp-1 w-fit animate-pulse rounded bg-slate-200 text-lg font-semibold tracking-wider text-transparent">
                         Loading album name
                       </h3>
                     )}
@@ -202,12 +217,12 @@ const App: React.FC = () => {
                     {songData?.track_name ? (
                       <h1
                         ref={trackNameRef}
-                        className={`font-bold tracking-wide text-white transition-all duration-300 ease-out ${fontSize}`}
+                        className={`mx-4 mb-1.5 font-inter font-bold tracking-wide text-white transition-all duration-300 ease-out ${fontSize}`}
                       >
                         {songData?.track_name}
                       </h1>
                     ) : (
-                      <h1 className="mt-2 line-clamp-2 w-fit animate-pulse rounded bg-slate-200 text-4xl font-bold tracking-wide text-transparent">
+                      <h1 className="mx-4 mb-1.5 mt-2 line-clamp-2 w-fit animate-pulse rounded bg-slate-200 text-4xl font-bold tracking-wide text-transparent">
                         Loading track_name
                       </h1>
                     )}
@@ -217,11 +232,11 @@ const App: React.FC = () => {
                     timeout={500}
                   >
                     {songData?.artist ? (
-                      <h2 className="pt-1.5 text-xl tracking-wider text-white/90">
+                      <h2 className="mx-4 mb-1.5 pt-1.5 text-2xl font-semibold tracking-wide text-white/90">
                         {songData?.artist}
                       </h2>
                     ) : (
-                      <h2 className="mt-2 w-fit animate-pulse rounded bg-slate-200 pt-1.5 text-xl tracking-wider text-transparent">
+                      <h2 className="mx-4 mb-1.5 w-fit animate-pulse rounded bg-slate-200 pt-1.5 text-2xl font-semibold tracking-wide text-transparent">
                         Loading artist
                       </h2>
                     )}

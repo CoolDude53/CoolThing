@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        inter: ["Inter var", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
       },
       colors: {
         brand: "#1ED760",
