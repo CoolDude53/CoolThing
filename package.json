@@ -1,0 +1,46 @@
+{
+  "name": "pickle.plaza",
+  "private": true,
+  "version": "0.8.8",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build-windows": "vite build && npm run build-server-windows",
+    "build-server-windows": "esbuild server/index.ts --bundle --platform=node --outdir=dist/ && cd dist && powershell -c ren index.js index.cjs",
+    "build": "vite build && npm run build-server",
+    "build-server": "esbuild server/index.ts --bundle --platform=node --outdir=dist/",
+    "setup": "node setup.js",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "clsx": "^2.1.1",
+    "deskthing-client": "latest",
+    "deskthing-server": "latest",
+    "node-vibrant": "^3.2.1-alpha.1",
+    "react": "^18.3.1",
+    "react-crossfade-simple": "^1.0.7",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.3.0",
+    "vite-plugin-node-polyfills": "^0.22.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-legacy": "^5.4.2",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "esbuild": "^0.19.2",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.0.1",
+    "vite": "^5.4.1"
+  }
+}
